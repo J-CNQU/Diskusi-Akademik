@@ -1,0 +1,10 @@
+Options -Multiviews
+
+RewriteEngine On
+
+# Jika file (seperti .css, .js, .png) ada di folder public, buka filenya langsung
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+
+# Jika file tidak ada, baru lempar ke index.php
+RewriteRule ^(.*)$ index.php?url=$1 [L,QSA]
