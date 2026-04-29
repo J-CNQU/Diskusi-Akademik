@@ -4,7 +4,6 @@
 <style>
     .content-header {
         border-bottom: 2px solid #eee;
-        /* Garis pembatas di atas */
         padding-bottom: 20px;
         margin-bottom: 30px;
         display: flex;
@@ -30,9 +29,8 @@
         border: 1px solid #e0e0e0;
         border-radius: 12px;
         padding: 25px;
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: transform 0.2s;
         position: relative;
-        overflow: hidden;
     }
 
     .topic-card-fancy:hover {
@@ -71,6 +69,7 @@
         color: #777;
     }
 
+    /* Sidebar Styles */
     .sidebar-panel {
         height: 100%;
         width: 0;
@@ -96,31 +95,40 @@
         z-index: 1999;
         backdrop-filter: blur(3px);
     }
+
+    /* Modal Styles */
+    .modal-so {
+        display: none;
+        position: fixed;
+        z-index: 3000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+        background: #fff;
+        width: 90%;
+        max-width: 500px;
+        margin: 50px auto;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
 </style>
 
 <div id="sideNav" class="sidebar-panel">
-    <a href="javascript:void(0)" onclick="closeNav()"
-        style="position: absolute; top: 15px; right: 25px; font-size: 36px; text-decoration: none; color: #333;">&times;</a>
-    <div style="padding: 20px 25px; border-bottom: 1px solid #eee;">
-        <div
-            style="width: 50px; height: 50px; background: var(--so-blue); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; margin-bottom: 10px;">
-            <?= strtoupper(substr($_SESSION['nama'], 0, 1)); ?>
-        </div>
-        <strong style="font-size: 16px;"><?= $_SESSION['nama']; ?></strong><br>
-        <small style="color: #888; text-transform: uppercase;"><?= $_SESSION['role']; ?>
-            <?= ($_SESSION['role'] == 'siswa') ? '• ' . $_SESSION['kelas'] : ''; ?></small>
-    </div>
     <div style="padding: 10px 0;">
-        <a href="<?= BASEURL; ?>/index.php?url=TopicsControllers"
-            style="padding: 15px 25px; display: block; text-decoration: none; color: #333;">🏠 Beranda</a>
+        <a href="<?= BASEURL; ?>/index.php?url=TopicsControllers">🏠 Beranda</a>
 
-        <?php if ($_SESSION['role'] !== 'siswa'): ?>
-            <a href="<?= BASEURL; ?>/index.php?url=TopicsControllers/tambah"
-                style="padding: 15px 25px; display: block; text-decoration: none; color: #333;">➕ Buat Topik Baru</a>
+        <?php if ($_SESSION['role'] === 'admin'): ?>
+            <a href="<?= BASEURL; ?>/index.php?url=Admin/users" style="color: #28a745;">👥 Kelola Pengguna</a>
         <?php endif; ?>
 
-        <a href="<?= BASEURL; ?>/index.php?url=Auth/logout"
-            style="padding: 15px 25px; display: block; text-decoration: none; color: #dc3545;">🚪 Keluar</a>
+        <a href="<?= BASEURL; ?>/index.php?url=Auth/logout">🚪 Keluar</a>
     </div>
 </div>
 <div id="sideOverlay" class="overlay-blur" onclick="closeNav()"></div>
@@ -132,10 +140,11 @@
                 style="background: #f4f4f4; border: none; width: 45px; height: 45px; border-radius: 10px; cursor: pointer; font-size: 20px;">☰</button>
             <h1 class="section-title">Forum Diskusi</h1>
         </div>
-
-        <?php if ($_SESSION['role'] !== 'siswa'): ?>
-            <a href="<?= BASEURL; ?>/index.php?url=TopicsControllers/tambah" class="btn-primary-so"
-                style="text-decoration: none; padding: 10px 20px;">+ Tambah Topik</a>
+        <?php if (strtolower($_SESSION['role']) !== 'siswa'): ?>
+            <button onclick="openModal()" class="btn-primary-so"
+                style="padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
+                + Tambah Topik
+            </button>
         <?php endif; ?>
     </header>
 
@@ -143,26 +152,22 @@
         <?php foreach ($data['topics'] as $topic): ?>
             <?php
             $role = strtolower($_SESSION['role']);
+            $user_kelas = $_SESSION['kelas']; // Kelas siswa saat login
             $target = $topic['target_kelas'];
-            $user_kelas = $_SESSION['kelas'];
 
-            // Filter Hak Lihat
+            // LOGIKA FILTER:
+            // 1. Jika Admin atau Guru -> Bisa lihat SEMUA.
+            // 2. Jika Siswa -> Hanya bisa lihat yang 'Umum' ATAU yang kelasnya COCOK
             if ($role !== 'siswa' || $target === 'Umum' || $target === $user_kelas):
                 ?>
                 <article class="topic-card-fancy">
                     <div class="card-badge <?= ($target == 'Umum') ? 'badge-umum' : 'badge-kelas'; ?>">
-                        <?= ($target == 'Umum') ? '🌍 Umum' : '📍 Kelas ' . $target; ?>
+                        <?= ($target == 'Umum') ? '🌍 Umum' : '📍 ' . $target; ?>
                     </div>
-
-                    <h2 style="margin: 0 0 10px 0; font-size: 20px; color: #222;"><?= $topic['judul']; ?></h2>
-                    <p style="color: #666; line-height: 1.6; font-size: 15px;">
-                        <?= (strlen($topic['deskripsi']) > 150) ? substr($topic['deskripsi'], 0, 150) . '...' : $topic['deskripsi']; ?>
-                    </p>
-
+                    <h2><?= $topic['judul']; ?></h2>
                     <div class="topic-info">
                         <span>📅 <?= date('d M Y', strtotime($topic['created_at'])); ?></span>
-                        <a href="<?= BASEURL; ?>/index.php?url=TopicsControllers/detail/<?= $topic['id']; ?>"
-                            style="color: var(--so-blue); font-weight: bold; text-decoration: none;">Diskusi Lengkap &rarr;</a>
+                        <a href="<?= BASEURL; ?>/index.php?url=TopicsControllers/detail/<?= $topic['id']; ?>">Lihat &rarr;</a>
                     </div>
                 </article>
             <?php endif; ?>
@@ -170,7 +175,75 @@
     </div>
 </div>
 
+<div id="modalTopic" class="modal-so">
+    <div class="modal-content">
+        <div
+            style="padding: 20px; background: #007bff; color: white; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">Buat Topik Baru</h3>
+            <span onclick="closeModal()" style="cursor: pointer; font-size: 28px;">&times;</span>
+        </div>
+        <form action="<?= BASEURL; ?>/index.php?url=TopicsControllers/simpan" method="POST"
+            enctype="multipart/form-data" style="padding: 25px;">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px;">Judul Topik</label>
+                <input type="text" name="judul" required
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px;">Deskripsi</label>
+                <textarea name="deskripsi" rows="4" required
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; resize: none;"></textarea>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px;">Target Kelas</label>
+                <select name="target_kelas"
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <option value="Umum">🌍 Umum (Semua Kelas)</option>
+
+                    <?php
+                    $current_jurusan = "";
+                    foreach ($data['list_kelas'] as $kls):
+
+                        $parts = explode(' ', $kls['nama_kelas']);
+                        $jurusan = isset($parts[1]) ? $parts[1] : '';
+
+
+                        if ($current_jurusan !== $jurusan) {
+                            echo "<option disabled style='background:#f4f4f4; color:#333; font-weight:bold;'>--- JURUSAN $jurusan ---</option>";
+                            $current_jurusan = $jurusan;
+                        }
+                        ?>
+                        <option value="<?= $kls['nama_kelas']; ?>">
+                            📍 <?= $kls['nama_kelas']; ?>
+                        </option>
+                    <?php endforeach; ?>
+
+                </select>
+            </div>
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px;">Lampiran Foto (Opsional)</label>
+                <input type="file" name="lampiran" accept="image/*">
+            </div>
+            <button type="submit"
+                style="width: 100%; background: #007bff; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">
+                Terbitkan Topik
+            </button>
+        </form>
+    </div>
+</div>
+
 <script>
     function openNav() { document.getElementById("sideNav").style.width = "300px"; document.getElementById("sideOverlay").style.display = "block"; }
     function closeNav() { document.getElementById("sideNav").style.width = "0"; document.getElementById("sideOverlay").style.display = "none"; }
+
+
+    function openModal() { document.getElementById("modalTopic").style.display = "block"; }
+    function closeModal() { document.getElementById("modalTopic").style.display = "none"; }
+
+
+    window.onclick = function (event) {
+        let modal = document.getElementById("modalTopic");
+        if (event.target == modal) { closeModal(); }
+        if (event.target == document.getElementById("sideOverlay")) { closeNav(); }
+    }
 </script>

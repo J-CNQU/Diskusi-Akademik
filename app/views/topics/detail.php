@@ -1,159 +1,167 @@
-<div class="detail-container">
-    <article class="topic-card">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div class="card-tag <?= ($data['topic']['target_kelas'] == 'Umum') ? 'tag-umum' : 'tag-kelas'; ?>">
-                <?= ($data['topic']['target_kelas'] == 'Umum') ? '🌍 UMUM' : '📍 KELAS ' . $data['topic']['target_kelas']; ?>
+<div class="wrapper" style="padding: 20px; max-width: 800px; margin: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <a href="<?= BASEURL; ?>/index.php?url=TopicsControllers"
+            style="text-decoration: none; color: #666; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+            <span style="font-size: 20px;">&larr;</span> Kembali
+        </a>
+        <?php if ($data['topic']['user_id'] == $_SESSION['user_id'] || strtolower($_SESSION['role']) == 'admin'): ?>
+            <a href="<?= BASEURL; ?>/index.php?url=TopicsControllers/hapus/<?= $data['topic']['id']; ?>"
+                onclick="return confirm('Hapus topik?')"
+                style="color: #dc3545; text-decoration: none; font-weight: bold; font-size: 14px;">🗑️ Hapus Topik</a>
+        <?php endif; ?>
+    </div>
+
+    <article class="topic-card"
+        style="background: #fff; border: 1px solid #eee; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+            <div
+                style="background: #f0f2f5; padding: 5px 15px; border-radius: 20px; font-size: 11px; font-weight: 800; color: #555;">
+                <?= ($data['topic']['target_kelas'] == 'Umum') ? '🌍 UMUM' : '📍 ' . $data['topic']['target_kelas']; ?>
             </div>
-            <small class="text-muted">ID: #<?= $data['topic']['id']; ?></small>
+            <?php if (isset($data['topic']['role']) && $data['topic']['role'] == 'guru'): ?>
+                <div
+                    style="background: #e3f2fd; color: #1565c0; padding: 5px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; border: 1px solid #bbdefb;">
+                    ✅ GURU TERVERIFIKASI
+                </div>
+            <?php endif; ?>
         </div>
 
-        <h1 style="margin-top: 15px;"><?= $data['topic']['judul']; ?></h1>
-        
-        <div class="topic-content" style="font-size: 16px; line-height: 1.6; color: #333; margin: 20px 0;">
-            <?= nl2br($data['topic']['deskripsi']); ?>
-        </div>
+        <h1 style="margin: 0 0 15px; font-size: 26px; color: #1a1a1a; letter-spacing: -0.5px;">
+            <?= $data['topic']['judul']; ?>
+        </h1>
+        <p style="line-height: 1.7; color: #444; font-size: 16px;"><?= nl2br($data['topic']['deskripsi']); ?></p>
 
-        <?php if (!empty($data['topic']['lampiran'])) : ?>
-            <div class="attachment-section" style="margin: 25px 0; padding: 15px; background: #f8f9fa; border: 1px dashed #dee2e6; border-radius: 10px;">
-                <p style="margin-bottom: 12px; font-weight: bold; color: #555;">📎 Lampiran Materi:</p>
-                <?php 
-                    $file = $data['topic']['lampiran'];
-                    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-                    $img_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-                ?>
-
-                <?php if (in_array($ext, $img_ext)) : ?>
-                    <div style="text-align: center;">
-                        <img src="<?= BASEURL; ?>/uploads/<?= $file; ?>" 
-                             style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: zoom-in;" 
-                             onclick="window.open(this.src)">
-                        <p style="font-size: 12px; color: #888; margin-top: 5px;">Klik gambar untuk memperbesar</p>
-                    </div>
-                <?php else : ?>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="font-size: 30px;">📂</div>
-                        <div>
-                            <div style="font-weight: bold; font-size: 14px;"><?= $file; ?></div>
-                            <a href="<?= BASEURL; ?>/uploads/<?= $file; ?>" target="_blank" 
-                               style="display: inline-block; margin-top: 5px; color: #007bff; font-weight: bold; text-decoration: none;">
-                               Download / Lihat Dokumen (<?= strtoupper($ext); ?>) &rarr;
-                            </a>
-                        </div>
-                    </div>
-                <?php endif; ?>
+        <?php if (!empty($data['topic']['lampiran'])): ?>
+            <div style="margin-top: 25px; border-radius: 12px; overflow: hidden; border: 1px solid #eee;">
+                <img src="<?= BASEURL; ?>/uploads/<?= $data['topic']['lampiran']; ?>"
+                    style="width: 100%; display: block; cursor: zoom-in;" onclick="window.open(this.src)">
             </div>
         <?php endif; ?>
-
-        <div class="topic-footer" style="border-top: 1px solid #eee; padding-top: 15px; color: #777; font-size: 13px;">
-            Diterbitkan oleh: <strong>Admin/Guru</strong> • 
-            📅 <?= date('d M Y, H:i', strtotime($data['topic']['created_at'])); ?>
-        </div>
     </article>
 
-    <section class="comment-section">
-        <div class="comment-title">💬 Diskusi (<?= count($data['replies']); ?>)</div>
+    <section class="comment-area" style="margin-top: 40px;">
+        <h3 style="margin-bottom: 25px; color: #222; display: flex; align-items: center; gap: 10px;">
+            💬 Diskusi <span
+                style="background: #eee; padding: 2px 10px; border-radius: 10px; font-size: 14px;"><?= count($data['replies']); ?></span>
+        </h3>
 
-        <?php foreach($data['replies'] as $reply) : ?>
-            <div class="comment-bubble <?= ($reply['user_id'] == $_SESSION['user_id']) ? 'my-comment' : ''; ?>" id="reply-<?= $reply['id']; ?>">
-                
-                <div class="user-avatar"><?= strtoupper(substr($reply['nama'], 0, 1)); ?></div>
-                
-                <div class="comment-body">
-                    <div class="comment-header">
-                        <div class="author-info">
-                            <strong><?= $reply['nama']; ?></strong>
-                            <span class="comment-date"><?= date('H:i', strtotime($reply['created_at'])); ?></span>
-                        </div>
+        <?php foreach ($data['replies'] as $reply): ?>
+            <div class="comment-bubble <?= ($reply['user_id'] == $_SESSION['user_id']) ? 'my-comment' : ''; ?>"
+                id="reply-<?= $reply['id']; ?>"
+                style="display: flex; gap: 15px; background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 16px; margin-bottom: 20px; position: relative; transition: 0.3s;">
 
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <?php if($reply['user_id'] == $_SESSION['user_id']) : ?>
-                                <div class="action-links">
-                                    <a href="javascript:void(0)" onclick="showEditForm(<?= $reply['id']; ?>)" style="color: var(--so-blue);">Edit</a>
-                                    <a href="<?= BASEURL; ?>/index.php?url=TopicsControllers/hapusReply/<?= $reply['id']; ?>/<?= $data['topic']['id']; ?>" 
-                                       style="color: #d0393e;" onclick="return confirm('Hapus komentar ini?')">Hapus</a>
-                                </div>
+                <div
+                    style="width: 40px; height: 40px; background: <?= (isset($reply['role']) && $reply['role'] == 'guru') ? '#007bff' : '#6c757d'; ?>; color: #fff; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    <?= strtoupper(substr($reply['nama'], 0, 1)); ?>
+                </div>
+
+                <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-weight: 800; color: #333; font-size: 14px;"><?= $reply['nama']; ?></span>
+                            <?php if (isset($reply['role']) && $reply['role'] == 'guru'): ?>
+                                <span title="Guru Terverifikasi" style="color: #007bff; font-size: 12px;">✔️</span>
                             <?php endif; ?>
+                            <span
+                                style="font-size: 11px; color: #bbb;"><?= date('H:i', strtotime($reply['created_at'])); ?></span>
+                        </div>
+                        <div style="position: relative;">
+                            <button class="btn-dots" onclick="toggleMenu('menu-<?= $reply['id']; ?>')"
+                                style="background: none; border: none; cursor: pointer; color: #bbb; font-size: 20px; padding: 5px;">⋮</button>
 
-                            <div class="menu-container">
-                                <button class="btn-dots" onclick="toggleMenu(<?= $reply['id']; ?>)">⋮</button>
-                                <div class="emoji-popup" id="popup-<?= $reply['id']; ?>">
-                                    <form action="<?= BASEURL; ?>/index.php?url=TopicsControllers/react" method="post">
-                                        <input type="hidden" name="reply_id" value="<?= $reply['id']; ?>">
-                                        <input type="hidden" name="topic_id" value="<?= $data['topic']['id']; ?>">
-                                        <button name="emoji" value="👍">👍</button>
-                                        <button name="emoji" value="❤️">❤️</button>
-                                        <button name="emoji" value="😂">😂</button>
-                                        <button name="emoji" value="🔥">🔥</button>
-                                    </form>
-                                </div>
+                            <div id="menu-<?= $reply['id']; ?>" class="emoji-popup"
+                                style="display: none; position: absolute; right: 0; top: 35px; background: #fff; border: 1px solid #eee; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 12px; padding: 10px; z-index: 100; min-width: 150px;">
+
+                                <p
+                                    style="font-size: 10px; font-weight: bold; color: #aaa; margin: 0 0 8px 5px; text-transform: uppercase;">
+                                    Berikan Reaksi</p>
+                                <form action="<?= BASEURL; ?>/index.php?url=TopicsControllers/react" method="post"
+                                    style="display: flex; gap: 8px; justify-content: center; margin-bottom: 10px;">
+                                    <input type="hidden" name="topic_id" value="<?= $data['topic']['id']; ?>">
+                                    <input type="hidden" name="reply_id" value="<?= $reply['id']; ?>">
+                                    <button type="submit" name="emoji" value="👍" class="btn-react">👍</button>
+                                    <button type="submit" name="emoji" value="❤️" class="btn-react">❤️</button>
+                                    <button type="submit" name="emoji" value="😂" class="btn-react">😂</button>
+                                    <button type="submit" name="emoji" value="🔥" class="btn-react">🔥</button>
+                                </form>
+
+                                <?php if ($reply['user_id'] == $_SESSION['user_id'] || $_SESSION['role'] == 'admin'): ?>
+                                    <div style="border-top: 1px solid #f5f5f5; padding-top: 8px;">
+                                        <a href="<?= BASEURL; ?>/index.php?url=TopicsControllers/hapusReply/<?= $reply['id']; ?>/<?= $data['topic']['id']; ?>"
+                                            onclick="return confirm('Hapus komentar?')"
+                                            style="color: #dc3545; font-size: 12px; text-decoration: none; display: block; text-align: center; font-weight: bold;">🗑️
+                                            Hapus</a>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
 
-                    <p class="comment-text" id="text-<?= $reply['id']; ?>"><?= $reply['isi_komentar']; ?></p>
+                    <p style="margin: 8px 0; font-size: 15px; color: #444; line-height: 1.5;">
+                        <?= nl2br($reply['isi_komentar']); ?>
+                    </p>
 
-                    <form action="<?= BASEURL; ?>/index.php?url=TopicsControllers/editReply" method="post" 
-                          id="form-edit-<?= $reply['id']; ?>" style="display: none; margin-top: 10px;">
-                        <input type="hidden" name="id" value="<?= $reply['id']; ?>">
-                        <input type="hidden" name="topic_id" value="<?= $data['topic']['id']; ?>">
-                        <textarea name="isi_komentar" class="form-control" rows="3"><?= $reply['isi_komentar']; ?></textarea>
-                        <div style="margin-top: 10px;">
-                            <button type="submit" class="btn-primary-so" style="padding: 5px 15px; font-size: 12px;">Simpan</button>
-                            <button type="button" onclick="hideEditForm(<?= $reply['id']; ?>)" class="btn-ghost-so" style="font-size: 12px;">Batal</button>
-                        </div>
-                    </form>
-
-                    <div class="reaction-display">
-                        <?php foreach($reply['reactions'] as $res) : ?>
-                            <span class="badge-reaction"><?= $res['emoji']; ?> <?= $res['total']; ?></span>
-                        <?php endforeach; ?>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;">
+                        <?php if (!empty($reply['reactions'])):
+                            foreach ($reply['reactions'] as $react): ?>
+                                <div
+                                    style="background: #f8f9fa; border: 1px solid #eef0f2; border-radius: 20px; padding: 3px 10px; font-size: 12px; display: flex; align-items: center; gap: 5px; transition: 0.2s;">
+                                    <span><?= $react['emoji']; ?></span>
+                                    <span style="font-weight: 800; color: #007bff;"><?= $react['jumlah']; ?></span>
+                                </div>
+                            <?php endforeach; endif; ?>
                     </div>
                 </div>
             </div>
         <?php endforeach; ?>
-
-        <?php if(count($data['replies']) == 0) : ?>
-            <div style="text-align: center; color: #999; padding: 40px 0;">Belum ada diskusi. Mari mulai bercakap!</div>
-        <?php endif; ?>
     </section>
 
-    <section class="reply-form-container">
-        <h4>Kirim Pertanyaan / Tanggapan</h4>
+    <section
+        style="margin-top: 30px; background: #fff; border: 1px solid #eee; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
         <form action="<?= BASEURL; ?>/index.php?url=TopicsControllers/reply" method="post">
             <input type="hidden" name="topic_id" value="<?= $data['topic']['id']; ?>">
-            <div class="spacing-row">
-                <textarea name="isi_komentar" class="form-control" rows="5" placeholder="Tuliskan pendapat atau pertanyaanmu..." required></textarea>
-            </div>
-            <div class="btn-group">
-                <button type="submit" class="btn-primary-so">Kirim Balasan</button>
-                <a href="<?= BASEURL; ?>/index.php?url=TopicsControllers" class="btn-ghost-so">Kembali ke Daftar</a>
-            </div>
+            <input type="hidden" name="user_id" value="<?= $_SESSION['user_id']; ?>">
         </form>
     </section>
 </div>
 
-<script>
-function toggleMenu(id) {
-    const popup = document.getElementById('popup-' + id);
-    document.querySelectorAll('.emoji-popup').forEach(p => { 
-        if(p !== popup) p.style.display = 'none'; 
-    });
-    popup.style.display = (popup.style.display === 'block') ? 'none' : 'block';
-}
-
-window.onclick = function(e) {
-    if (!e.target.matches('.btn-dots')) {
-        document.querySelectorAll('.emoji-popup').forEach(p => p.style.display = 'none');
+<style>
+    .my-comment {
+        border-left: 5px solid #007bff !important;
+        background-color: #fcfdff !important;
     }
-}
 
-function showEditForm(id) {
-    document.getElementById('text-' + id).style.display = 'none';
-    document.getElementById('form-edit-' + id).style.display = 'block';
-}
+    .btn-react {
+        background: #f8f9fa;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 5px;
+        transition: 0.2s;
+        flex: 1;
+    }
 
-function hideEditForm(id) {
-    document.getElementById('text-' + id).style.display = 'block';
-    document.getElementById('form-edit-' + id).style.display = 'none';
-}
+    .btn-react:hover {
+        transform: translateY(-3px);
+        background: #fff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .comment-bubble:hover {
+        border-color: #007bff;
+    }
+</style>
+
+<script>
+    function toggleMenu(id) {
+        document.querySelectorAll('.emoji-popup').forEach(el => { if (el.id !== id) el.style.display = 'none'; });
+        const menu = document.getElementById(id);
+        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+    }
+    window.onclick = function (e) {
+        if (!e.target.matches('.btn-dots')) {
+            document.querySelectorAll('.emoji-popup').forEach(el => el.style.display = 'none');
+        }
+    }
 </script>

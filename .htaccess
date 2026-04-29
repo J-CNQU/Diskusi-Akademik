@@ -1,6 +1,12 @@
 <IfModule mod_rewrite.c>
-    RewriteEngine On
+    Options -MultiViews
 
-    RewriteRule ^$ public/ [L]
-    RewriteRule (.*) public/$1 [L]
+RewriteEngine On
+
+# Mengabaikan file dan folder yang memang ada secara fisik
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+
+# Mengarahkan sisanya ke index.php
+RewriteRule ^(.*)$ index.php?url=$1 [L,QSA]
 </IfModule>

@@ -2,6 +2,43 @@
 
 class Auth extends Controller
 {
+
+    public function parseURL()
+    {
+        if (isset($_GET['url'])) {
+            $url = rtrim($_GET['url'], '/');
+            $url = filter_var($url, FILTER_SANITIZE_URL);
+            $url = explode('/', $url);
+            return $url;
+        }
+    }
+    public function prosesDaftar()
+    {
+        $data = [
+            'nama' => $_POST['nama'],
+            'username' => $_POST['username'],
+            'password' => password_hash($_POST['password'], PASSWORD_DEFAULT),
+            'kelas' => $_POST['kelas'], // Menangkap input kelas
+            'role' => 'siswa'          // Default otomatis jadi siswa
+        ];
+
+        if ($this->model('Model')->tambahUser($data) > 0) {
+            header('Location: ' . BASEURL . '/index.php?url=Auth/login');
+            exit;
+        }
+    }
+
+    public function register()
+    {
+        $data['judul'] = 'Sign Up';
+
+        // BARIS INI WAJIB ADA: Mengambil data dari Model
+        $data['list_kelas'] = $this->model('Model')->getDaftarKelas();
+
+        $this->view('templates/header', $data);
+        $this->view('auth/signup', $data); // Mengirim $data ke view signup
+        $this->view('templates/footer');
+    }
     public function index()
     {
         $data['judul'] = 'Halaman Login';
@@ -29,18 +66,19 @@ class Auth extends Controller
             if ($user) {
 
                 if (password_verify($password, $user['password'])) {
-                    if (session_status() == PHP_SESSION_NONE) session_start();
+                    if (session_status() == PHP_SESSION_NONE)
+                        session_start();
 
                     $_SESSION['login'] = true;
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['nama'] = $user['nama'];
-                    $_SESSION['role'] = strtolower($user['role']);
-                    $_SESSION['kelas'] = $user['kelas']; 
+                    $_SESSION['role'] = $user['role'];   // Penting: agar muncul 'siswa'
+                    $_SESSION['kelas'] = $user['kelas'];
 
                     header('Location: ' . BASEURL . '/index.php?url=TopicsControllers');
                     exit;
                 } else {
-    
+
                     echo "<script>alert('❌ Gagal Login: Password yang Anda masukkan salah!'); window.location.href='" . BASEURL . "/index.php?url=Auth';</script>";
                     exit;
                 }
@@ -76,10 +114,10 @@ class Auth extends Controller
                 echo "<script>alert('❌ Pendaftaran Gagal: Data tidak tersimpan ke sistem.'); window.location.href='" . BASEURL . "/index.php?url=Auth/signup';</script>";
                 exit;
             }
-            
+
         } catch (PDOException $e) {
             $pesanError = addslashes($e->getMessage());
-            
+
             if (strpos($pesanError, 'Duplicate entry') !== false) {
                 echo "<script>alert('❌ Pendaftaran Gagal: Email ini sudah terdaftar di sistem!'); window.location.href='" . BASEURL . "/index.php?url=Auth/signup';</script>";
             } else {
